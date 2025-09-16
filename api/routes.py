@@ -117,6 +117,23 @@ def get_poll_results(poll_id: int, db: Session = Depends(get_db)):
     return {"poll_id": poll_id, "question": poll.question, "results": formatted_results}
 
 
+@router.get("/polls/{poll_id}/chart_data")
+def get_poll_chart_data(poll_id: int, db: Session = Depends(get_db)):
+    """
+    Retrieves poll results in a format suitable for charting.
+
+    Args:
+        poll_id (int): The ID of the poll to retrieve chart data for.
+        db (Session): Database session dependency.
+
+    Returns:
+        dict: A dictionary containing poll question and options with vote counts.
+    """
+    # Reuse the logic from get_poll_results
+    results = get_poll_results(poll_id, db)
+    return results
+
+
 @router.post("/polls", response_model=schemas.PollOut)
 def create_poll(
     poll: schemas.PollCreate,

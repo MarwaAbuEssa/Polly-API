@@ -89,3 +89,31 @@ def get_poll_results(poll_id: int):
         print(f"Response content: {e.response.json()}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+
+def get_poll_chart_data_client(poll_id: int):
+    """
+    Retrieves poll results data for charting.
+
+    Args:
+        poll_id (int): The ID of the poll to retrieve chart data for.
+
+    Returns:
+        dict: The poll chart data from the API.
+    """
+    response = requests.get(f"{BASE_URL}/polls/{poll_id}/chart_data")
+    response.raise_for_status()  # Raise an exception for HTTP errors
+    return response.json()
+
+
+    try:
+        # Example: Get chart data for poll with ID 1
+        poll_id_for_chart = 1
+        print(f"\nAttempting to retrieve chart data for poll {poll_id_for_chart}...")
+        chart_data = get_poll_chart_data_client(poll_id_for_chart)
+        print("Poll chart data retrieved successfully:")
+        print(json.dumps(chart_data, indent=2))
+    except requests.exceptions.HTTPError as e:
+        print(f"Error retrieving poll chart data: {e}")
+        print(f"Response content: {e.response.json()}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")

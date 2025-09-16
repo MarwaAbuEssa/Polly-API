@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Poll Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .chart-container {
+            width: 80%;
+            max-width: 700px;
+            margin-top: 20px;
+        }
+        select {
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dynamic Poll Chart</h1>
+
+    <label for="pollSelect">Select Poll ID:</label>
+    <input type="number" id="pollSelect" value="1" min="1">
+    <button onclick="fetchAndRenderChart()">Load Poll</button>
+
+    <label for="chartType">Select Chart Type:</label>
+    <select id="chartType" onchange="renderChart()">
+        <option value="bar">Bar Chart</option>
+        <option value="pie">Pie Chart</option>
+        <option value="doughnut">Doughnut Chart</option>
+    </select>
+
+    <div class="chart-container">
+        <canvas id="pollChart"></canvas>
+    </div>
+
+    <script>
+        const BASE_URL = "http://127.0.0.1:8000"; // Your API base URL
+        let currentChart = null;
+        let pollData = null;
+
+        async function fetchPollChartData(pollId) {
+            try {
+                const response = await fetch(`${BASE_URL}/polls/${pollId}/chart_data`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error("Error fetching poll chart data:", error);
+                return null;
+            }
+        }
+
+        function renderChart() {
+            if (!pollData) {
+                console.warn("No poll data available to render.");
+                return;
+            }
+
+            const ctx = document.getElementById('pollChart').getContext('2d');
+            const chartType = document.getElementById('chartType').value;
+
+            if (currentChart) {
+                currentChart.destroy(); // Destroy existing chart before creating a new one
+            }
+
+            const labels = pollData.results.map(option => option.text);
+            const data = pollData.results.map(option => option.vote_count);
+
+            currentChart = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '# of Votes',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(153, 102, 255, 0.6)',
+                            'rgba(255, 159, 64, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: pollData.question
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        async function fetchAndRenderChart() {
+            const pollId = document.getElementById('pollSelect').value;
+            if (pollId) {
+                pollData = await fetchPollChartData(pollId);
+                if (pollData) {
+                    renderChart();
+                }
+            }
+        }
+
+        // Initial load
+        fetchAndRenderChart();
+    </script>
+</body>
+</html>
